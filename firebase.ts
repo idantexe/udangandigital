@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, signInAnonymously } from 'firebase/auth';
+import * as firebaseAuth from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8Q3IrR73rpaE695YI3maGtUuJSPV33j8",
@@ -14,12 +14,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const auth = getAuth(app);
+export const auth = firebaseAuth.getAuth(app);
 
 // Helper function dengan error handling yang lebih baik
 export const signIn = async () => {
   try {
-    await signInAnonymously(auth);
+    await firebaseAuth.signInAnonymously(auth);
     console.log("Berhasil terhubung ke Firebase (Anonymous Auth).");
   } catch (error: any) {
     console.error("Gagal terhubung ke Firebase Auth:", error.message);

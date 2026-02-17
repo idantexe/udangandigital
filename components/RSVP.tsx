@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Send, RefreshCw, Sparkles, MessageSquare, AlertTriangle, WifiOff } from 'lucide-react';
+import { Send, RefreshCw, Sparkles, MessageSquare, AlertTriangle, PenTool } from 'lucide-react';
 import { collection, addDoc, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { generateWish } from '../services/geminiService';
-import { BatikKawung } from './Background';
+import { BatikTruntum } from './Background';
 
 interface RsvpSectionProps {
   onFinish: () => void;
@@ -29,28 +29,19 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onFinish }) => {
   const [isLoadingWishes, setIsLoadingWishes] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch wishes from Firebase
   useEffect(() => {
     const q = query(collection(db, "rsvps"), orderBy("timestamp", "desc"));
-    
-    // onSnapshot dengan error handling callback
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
-        const loadedWishes = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Wish[];
+        const loadedWishes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Wish[];
         setWishes(loadedWishes);
         setIsLoadingWishes(false);
         setError(null);
       },
       (err) => {
         console.error("Firestore Read Error:", err.code);
-        
         if (err.code === 'permission-denied') {
-          setError("Izin database ditolak. Mohon cek konfigurasi 'Firestore Rules' di Firebase Console.");
-        } else if (err.code === 'unavailable') {
-          setError("Koneksi offline. Mohon periksa internet Anda.");
+          setError("Izin database ditolak. Mohon cek konfigurasi Firebase.");
         } else {
           setError("Gagal memuat data ucapan.");
         }
@@ -61,55 +52,25 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onFinish }) => {
   }, []);
 
   const handleGenerateAI = async () => {
-    if (!name) {
-      alert("Mohon isi nama terlebih dahulu");
-      return;
-    }
+    if (!name) { alert("Mohon isi nama terlebih dahulu"); return; }
     setIsGenerating(true);
     try {
       const generatedMsg = await generateWish(name);
       setMsg(generatedMsg);
-    } catch (e) {
-      console.error(e);
-      alert("Gagal membuat ucapan. Silakan coba lagi.");
-    } finally {
-      setIsGenerating(false);
-    }
+    } catch (e) { console.error(e); alert("Gagal membuat ucapan."); } finally { setIsGenerating(false); }
   };
 
   const handleSend = async () => {
-    if (!name || !msg) {
-      alert("Mohon lengkapi Nama dan Ucapan.");
-      return;
-    }
-
+    if (!name || !msg) { alert("Mohon lengkapi Nama dan Ucapan."); return; }
     try {
       await addDoc(collection(db, "rsvps"), {
-        nama: name,
-        group: group || "Umum",
-        phone: phone,
-        kehadiran: attendance,
-        ucapan: msg,
-        timestamp: Timestamp.now()
+        nama: name, group: group || "Umum", phone: phone, kehadiran: attendance, ucapan: msg, timestamp: Timestamp.now()
       });
-      
-      // Clear form
-      setName("");
-      setGroup("");
-      setPhone("");
-      setMsg("");
-      
-      // Navigate to next tab after short delay
-      setTimeout(() => {
-        onFinish();
-      }, 1000);
+      setName(""); setGroup(""); setPhone(""); setMsg("");
+      setTimeout(() => { onFinish(); }, 1000);
     } catch (error: any) {
       console.error("Error adding document: ", error);
-      if (error.code === 'permission-denied') {
-        alert("GAGAL KIRIM: Database terkunci. Pastikan Rules Firestore sudah diatur ke 'public' atau Auth Anonymous aktif.");
-      } else {
-        alert("Gagal mengirim konfirmasi. Silakan periksa koneksi internet Anda.");
-      }
+      alert("Gagal mengirim konfirmasi.");
     }
   };
 
@@ -118,106 +79,100 @@ const RsvpSection: React.FC<RsvpSectionProps> = ({ onFinish }) => {
     try {
       const date = timestamp.toDate();
       const now = new Date();
-      const diff = Math.floor((now.getTime() - date.getTime()) / 60000); // minutes
-
+      const diff = Math.floor((now.getTime() - date.getTime()) / 60000);
       if (diff < 1) return "Baru saja";
-      if (diff < 60) return `${diff} menit yang lalu`;
-      if (diff < 1440) return `${Math.floor(diff / 60)} jam yang lalu`;
+      if (diff < 60) return `${diff}m lalu`;
+      if (diff < 1440) return `${Math.floor(diff / 60)}j lalu`;
       return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-    } catch (e) {
-      return "";
-    }
+    } catch (e) { return ""; }
   };
 
   return (
-    <div className="w-full max-w-5xl px-4 flex flex-col items-center pb-24">
-      <h2 className="text-2xl md:text-6xl font-serif font-bold text-center mb-8 md:mb-16 uppercase tracking-[0.2em] text-[#1E293B]">Konfirmasi Kehadiran</h2>
+    <div className="w-full max-w-5xl px-4 flex flex-col items-center pb-32">
+      <div className="text-center mb-10">
+        <span className="text-xs font-bold tracking-[0.4em] text-amber-600 uppercase mb-2 block font-cinzel">Reservasi</span>
+        <h2 className="text-3xl md:text-5xl font-cinzel text-[#0F172A]">Konfirmasi Kehadiran</h2>
+        <div className="w-24 h-1 bg-amber-500 mx-auto mt-4 rounded-full"></div>
+      </div>
       
-      <div className="bg-white/95 backdrop-blur-md p-6 md:p-14 rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.12)] border border-white text-left mb-16 relative overflow-hidden w-full max-w-4xl">
-        <div className="absolute top-0 right-0 w-64 h-64 opacity-[0.04] -mr-20 -mt-20 rotate-45"><BatikKawung /></div>
-        
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8 mb-8 relative z-10 font-sans">
-          <div className="space-y-6">
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">Nama Lengkap</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} className="w-full p-4 md:p-5 bg-slate-50 border border-slate-100 rounded-2xl font-serif text-base outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-inner" placeholder="Nama Anda" />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">Group / Instansi</label>
-              <input value={group} onChange={(e) => setGroup(e.target.value)} className="w-full p-4 md:p-5 bg-slate-50 border border-slate-100 rounded-2xl font-serif text-base outline-none focus:ring-2 focus:ring-blue-100 transition-all shadow-inner" placeholder="Contoh: Alumni UNPAS" />
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">No WhatsApp</label>
-              <div className="flex shadow-inner rounded-2xl overflow-hidden border border-slate-100">
-                <span className="bg-slate-200 px-5 flex items-center text-slate-600 font-bold border-r border-slate-200">+62</span>
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full p-4 md:p-5 bg-slate-50 outline-none focus:ring-2 focus:ring-blue-100 transition-all font-serif" placeholder="81234..." />
+      <div className="w-full grid lg:grid-cols-5 gap-8 items-start">
+        {/* Form Section */}
+        <div className="lg:col-span-3 glass-panel p-8 md:p-12 rounded-t-[2rem] rounded-bl-[2rem] relative overflow-hidden group hover:shadow-lg transition-all duration-500 bg-white/80">
+          <div className="absolute top-0 right-0 w-40 h-40 opacity-[0.05] -mr-10 -mt-10 rotate-12"><BatikTruntum /></div>
+          
+          <div className="space-y-8 relative z-10">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="relative group">
+                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full py-3 bg-transparent border-b border-slate-300 focus:border-amber-600 outline-none transition-colors font-serif text-lg text-slate-800 placeholder-transparent peer" placeholder="Nama" id="name" />
+                <label htmlFor="name" className="absolute left-0 -top-3.5 text-slate-500 text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-slate-600 peer-focus:text-xs uppercase tracking-wider">Nama Lengkap & Gelar</label>
+              </div>
+              <div className="relative group">
+                <input value={group} onChange={(e) => setGroup(e.target.value)} className="w-full py-3 bg-transparent border-b border-slate-300 focus:border-amber-600 outline-none transition-colors font-serif text-lg text-slate-800 placeholder-transparent peer" placeholder="Instansi" id="instansi" />
+                <label htmlFor="instansi" className="absolute left-0 -top-3.5 text-slate-500 text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-slate-600 peer-focus:text-xs uppercase tracking-wider">Instansi / Hubungan</label>
               </div>
             </div>
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">Kehadiran</label>
-              <div className="flex gap-4">
-                {['Hadir', 'Tidak Hadir'].map(opt => (
-                  <button key={opt} onClick={() => setAttendance(opt)} className={`flex-1 p-4 md:p-5 rounded-2xl font-bold uppercase tracking-widest transition-all text-xs md:text-sm ${attendance === opt ? 'bg-[#1E293B] text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{opt}</button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="relative mb-10 z-10 font-sans">
-          <div className="flex justify-between items-center mb-3 px-2">
-            <label className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Pesan & Doa</label>
-            <button 
-              onClick={handleGenerateAI} 
-              disabled={!name || isGenerating} 
-              className={`text-[9px] md:text-[10px] font-bold text-blue-700 flex items-center gap-2 bg-blue-50 px-4 py-1.5 rounded-full hover:bg-blue-100 transition-all border border-blue-200 ${(!name || isGenerating) && 'opacity-50 cursor-not-allowed'}`}
-            >
-              {isGenerating ? <RefreshCw className="animate-spin" size={12}/> : <Sparkles size={12}/>} 
-              {isGenerating ? 'Menulis...' : 'Tulis via AI'}
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="relative group">
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full py-3 bg-transparent border-b border-slate-300 focus:border-amber-600 outline-none transition-colors font-serif text-lg text-slate-800 placeholder-transparent peer" placeholder="WhatsApp" id="wa" />
+                <label htmlFor="wa" className="absolute left-0 -top-3.5 text-slate-500 text-xs transition-all peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-400 peer-placeholder-shown:top-3 peer-focus:-top-3.5 peer-focus:text-slate-600 peer-focus:text-xs uppercase tracking-wider">Nomor WhatsApp</label>
+              </div>
+               <div>
+                  <label className="block text-[10px] font-bold uppercase text-slate-400 mb-2 tracking-widest">Status Kehadiran</label>
+                  <div className="flex bg-slate-100/50 p-1 rounded-full border border-slate-200">
+                    {['Hadir', 'Tidak Hadir'].map(opt => (
+                      <button key={opt} onClick={() => setAttendance(opt)} className={`flex-1 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 ${attendance === opt ? 'bg-[#0F172A] text-amber-50 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>{opt}</button>
+                    ))}
+                  </div>
+               </div>
+            </div>
+
+            <div className="relative pt-4">
+               <div className="flex justify-between items-end mb-2">
+                 <label className="text-xs font-bold uppercase text-slate-500 tracking-widest">Ucapan & Doa</label>
+                 <button onClick={handleGenerateAI} disabled={!name || isGenerating} className={`text-[10px] flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-all ${(!name || isGenerating) && 'opacity-50 grayscale'}`}>
+                    {isGenerating ? <RefreshCw className="animate-spin" size={10}/> : <Sparkles size={10}/>} {isGenerating ? 'Merangkai Kata...' : 'Buatkan via AI'}
+                 </button>
+               </div>
+               <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className="w-full p-4 bg-slate-50/50 border border-slate-200 focus:border-amber-500 rounded-xl font-serif text-slate-700 outline-none transition-all resize-none italic" placeholder="Tuliskan doa restu Anda di sini..."></textarea>
+            </div>
+
+            <button onClick={handleSend} className="w-full py-4 bg-[#0F172A] hover:bg-slate-800 text-white rounded-xl font-cinzel font-bold tracking-[0.2em] shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-3 border border-slate-700/50">
+              <span>Kirim Konfirmasi</span> <Send size={16} />
             </button>
           </div>
-          <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={4} className="w-full p-5 bg-slate-50 border border-slate-100 rounded-3xl font-serif text-base outline-none focus:ring-2 focus:ring-blue-100 transition-all resize-none shadow-inner" placeholder="Tulis ucapan selamat..."></textarea>
         </div>
 
-        <button onClick={handleSend} className="w-full py-5 md:py-7 bg-[#1E293B] text-white rounded-3xl font-bold text-lg md:text-xl shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-4 uppercase tracking-[0.4em] relative z-10 font-sans group">
-          Kirim Konfirmasi <Send size={20} className="group-hover:translate-x-2 transition-transform"/>
-        </button>
-      </div>
-
-      <div className="w-full text-left max-w-4xl">
-        <h3 className="text-xl md:text-4xl font-serif font-bold text-[#1E293B] mb-8 md:mb-12 flex items-center gap-4">
-          <MessageSquare size={32} strokeWidth={1.5} /> Ucapan & Doa Suci ({wishes.length})
-        </h3>
-        <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-          {isLoadingWishes ? (
-             <div className="text-center p-10 text-slate-400 animate-pulse">Memuat ucapan...</div>
-          ) : error ? (
-             <div className="p-6 md:p-8 text-amber-700 bg-amber-50 rounded-[2rem] border border-amber-100 flex flex-col items-center gap-3 text-center">
-                <AlertTriangle size={32} />
-                <p className="font-bold text-sm md:text-base">{error}</p>
-                <p className="text-xs opacity-70">Data tidak dapat ditampilkan saat ini.</p>
-             </div>
-          ) : wishes.length === 0 ? (
-             <div className="text-center p-10 text-slate-400 bg-white/50 rounded-3xl border border-white">Belum ada ucapan. Jadilah yang pertama!</div>
-          ) : (
-            wishes.map((wish) => (
-              <div key={wish.id} className="bg-white/70 backdrop-blur-sm p-6 md:p-10 rounded-[2rem] border border-white/50 shadow-sm animate-fadeInUp transition-all hover:bg-white hover:shadow-md">
-                <div className="flex justify-between items-start mb-3 font-sans">
-                  <div>
-                    <h4 className="text-base md:text-xl font-serif font-bold text-[#1E293B]">{wish.nama}</h4>
-                    <div className="flex items-center gap-2">
-                       <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">{wish.group}</p>
-                       <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${wish.kehadiran === 'Hadir' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{wish.kehadiran}</span>
+        {/* Wishes Feed */}
+        <div className="lg:col-span-2 h-full min-h-[400px] flex flex-col">
+          <div className="flex items-center gap-3 mb-6 px-2">
+             <div className="bg-amber-100 p-2 rounded-full text-amber-800"><MessageSquare size={18} /></div>
+             <h3 className="font-cinzel text-lg font-bold text-slate-800">Ucapan Masuk <span className="text-slate-400 text-sm font-sans ml-1">({wishes.length})</span></h3>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 max-h-[600px]">
+             {isLoadingWishes ? (
+               <div className="text-center py-10 text-slate-400 text-sm animate-pulse">Mengambil data...</div>
+             ) : wishes.length === 0 ? (
+               <div className="text-center py-10 border border-dashed border-slate-300 rounded-xl text-slate-400 text-sm italic">Jadilah yang pertama memberikan ucapan.</div>
+             ) : (
+               wishes.map((wish) => (
+                 <div key={wish.id} className="bg-white p-5 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-slate-100 hover:border-amber-100 transition-all group">
+                    <div className="flex justify-between items-start mb-2">
+                       <div>
+                          <h4 className="font-serif font-bold text-slate-800 text-sm md:text-base">{wish.nama}</h4>
+                          <span className="text-[10px] text-amber-700 uppercase tracking-wider font-bold">{wish.group}</span>
+                       </div>
+                       <span className={`w-2 h-2 rounded-full ${wish.kehadiran === 'Hadir' ? 'bg-emerald-500' : 'bg-rose-500'}`} title={wish.kehadiran}></span>
                     </div>
-                  </div>
-                  <span className="text-[9px] text-slate-400 uppercase font-bold bg-slate-50 px-3 py-1 rounded-full">{formatTime(wish.timestamp)}</span>
-                </div>
-                <p className="text-sm md:text-lg font-serif italic text-[#475569] leading-relaxed">"{wish.ucapan}"</p>
-              </div>
-            ))
-          )}
+                    <p className="font-serif italic text-slate-600 text-sm leading-relaxed border-l-2 border-slate-100 pl-3 group-hover:border-amber-300 transition-colors">"{wish.ucapan}"</p>
+                    <div className="mt-3 flex justify-end">
+                       <span className="text-[9px] text-slate-400 uppercase tracking-widest">{formatTime(wish.timestamp)}</span>
+                    </div>
+                 </div>
+               ))
+             )}
+          </div>
         </div>
       </div>
     </div>

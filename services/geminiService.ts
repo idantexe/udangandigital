@@ -1,10 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = "AIzaSyD8Q3IrR73rpaE695YI3maGtUuJSPV33j8";
-
 export const generateWish = async (name: string): Promise<string> => {
   try {
-    const ai = new GoogleGenAI({ apiKey: API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const prompt = `Buatkan ucapan selamat sidang promosi doktor yang sangat formal, elegan, akademik, dan puitis dari saya (${name}) untuk Ibu Dr. Yusni Nuryani. Maksimal 2 kalimat.`;
     
