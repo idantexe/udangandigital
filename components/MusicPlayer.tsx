@@ -1,59 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import ReactPlayer from 'react-player/youtube';
+import React, { useState, useEffect, useRef } from 'react';
 import { Music, VolumeX } from 'lucide-react';
 
 interface MusicPlayerProps {
-  shouldPlay: boolean;
+  autoStart: boolean;
 }
 
-const MusicPlayer: React.FC<MusicPlayerProps> = ({ shouldPlay }) => {
+const MusicPlayer: React.FC<MusicPlayerProps> = ({ autoStart }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  
-  useEffect(() => {
-    if (shouldPlay) {
-      setIsPlaying(true);
-    }
-  }, [shouldPlay]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrl = "https://res.cloudinary.com/drs5bj8tq/video/upload/v1771307650/Alex_Warren_-_Ordinary_Official_Lyric_Video_ymwzjh.mp3";
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
+  useEffect(() => {
+    if (autoStart && audioRef.current) {
+      // Browser policy requires user interaction before playing audio.
+      // Since autoStart is triggered by a button click in the parent ("Buka Undangan"),
+      // this usually works. We catch errors just in case.
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.log("Autoplay prevented:", error);
+            setIsPlaying(false);
+          });
+      }
+    }
+  }, [autoStart]);
+
+  const togglePlay = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
   };
 
   return (
-    <div className="fixed top-6 right-6 z-[120]">
-      {/* 
-        Optimization: Instead of 'hidden' (display: none), we use a 1px size 
-        with opacity 0 and pointer-events-none. This prevents browsers from 
-        pausing the video execution which often happens with display:none.
-      */}
-      <div className="absolute top-0 left-0 w-px h-px opacity-0 pointer-events-none overflow-hidden">
-        <ReactPlayer
-          url="https://www.youtube.com/watch?v=A8dH4cKGa6s"
-          playing={isPlaying}
-          loop={true}
-          volume={0.6}
-          muted={isMuted}
-          width="100%"
-          height="100%"
-          playsinline={true}
-          config={{
-            youtube: {
-              playerVars: { showinfo: 0, controls: 0, disablekb: 1 }
-            }
-          }}
-        />
-      </div>
+    <div className="fixed top-4 right-4 md:top-12 md:right-12 z-[120]">
+      <audio ref={audioRef} src={audioUrl} loop />
 
-      {shouldPlay && (
-        <button 
-          onClick={toggleMute} 
-          className={`flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full border border-[#475569]/20 shadow-2xl transition-all duration-500 backdrop-blur-xl ${!isMuted ? 'bg-[#1E293B] text-white animate-[spin_10s_linear_infinite]' : 'bg-white/80 text-[#475569]'}`}
-          title={isMuted ? "Matikan Musik" : "Hidupkan Musik"}
-        >
-          {!isMuted ? <Music size={20} /> : <VolumeX size={20} />}
-        </button>
-      )}
+      <button 
+        onClick={togglePlay} 
+        className={`flex items-center justify-center w-12 h-12 md:w-20 md:h-20 rounded-full border-4 border-white shadow-2xl transition-all duration-700 backdrop-blur-3xl ${isPlaying ? 'bg-[#1E293B] text-white rotate-[360deg]' : 'bg-white/80 text-[#475569]'} hover:scale-110`}
+      >
+        <div className={isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}>
+          {isPlaying ? <Music size={24} className="md:w-8 md:h-8" /> : <VolumeX size={24} className="md:w-8 md:h-8" />}
+        </div>
+      </button>
     </div>
   );
 };

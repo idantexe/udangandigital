@@ -1,5 +1,5 @@
 {
-  "name": "undangan-digital-disertasi-dr.-yusni-nuryani",
+  "name": "undangan-digital-promosi-doktor",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,8 +13,7 @@
     "react-dom": "^19.2.4",
     "firebase": "^12.9.0",
     "@google/genai": "^1.41.0",
-    "lucide-react": "^0.564.0",
-    "react-player": "^3.4.0"
+    "lucide-react": "^0.564.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
