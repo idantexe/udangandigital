@@ -32,7 +32,7 @@ const DATA = {
 
 const Section: React.FC<{ isActive: boolean; children: React.ReactNode; className?: string }> = ({ isActive, children, className = "" }) => (
   <div className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out transform ${isActive ? 'opacity-100 translate-y-0 z-10 scale-100 blur-0' : 'opacity-0 translate-y-8 z-0 pointer-events-none scale-95 blur-sm'}`}>
-    <div className={`w-full h-full overflow-y-auto custom-scrollbar flex flex-col items-center px-4 md:px-12 pt-16 md:pt-20 pb-32 md:pb-36 ${className}`}>
+    <div className={`w-full h-full overflow-y-auto custom-scrollbar flex flex-col items-center px-3 md:px-12 pt-16 md:pt-20 pb-32 md:pb-36 ${className}`}>
         <div className="w-full max-w-6xl my-auto flex flex-col items-center flex-grow justify-center min-h-[50vh] md:min-h-[60vh]">
             {children}
         </div>
@@ -41,7 +41,7 @@ const Section: React.FC<{ isActive: boolean; children: React.ReactNode; classNam
 );
 
 const NavigationMenu: React.FC<{ activeTab: number; setActiveTab: (i: number) => void; tabs: any[] }> = ({ activeTab, setActiveTab, tabs }) => (
-    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] flex items-center gap-2 p-2 px-3 md:px-4 rounded-full bg-[#0F172A]/90 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-[90vw] md:w-auto max-w-full overflow-x-auto custom-scrollbar ring-1 ring-white/20 touch-pan-x">
+    <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100] flex items-center gap-2 p-2 px-3 md:px-4 rounded-full bg-[#0F172A]/90 backdrop-blur-xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.3)] w-auto max-w-[95vw] overflow-x-auto custom-scrollbar ring-1 ring-white/20 touch-pan-x">
       {tabs.filter((t, i) => i !== 6).map((tab) => {
         const originalIndex = tabs.findIndex(t => t.label === tab.label);
         const isActive = activeTab === originalIndex;
